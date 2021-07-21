@@ -10,10 +10,11 @@ header("content-type: text/javascript; charset=UTF-8");
         nombreVista: 'producto_hijo_4',
         constructor: function (config) {
 
-            this.initButtons = [this.cmbIdMarca,this.cmbTipo];
+            this.initButtons = [this.cmbIdMarca];
             Phx.vista.ProductoHijo4.superclass.constructor.call(this,config);
 
             this.load({params:{start:0, limit:this.tam_pag}});
+            this.iniciarEventos();
 
         },
         cmbIdMarca : new Ext.form.ComboBox({
@@ -45,19 +46,6 @@ header("content-type: text/javascript; charset=UTF-8");
             anchor: '100%',
             minChars: 2,
         }),
-        cmbTipo: new Ext.form.ComboBox({
-            name: 'tipo',
-            fieldLabel: 'Tipo',
-            allowBlank: true,
-            emptyText: 'Tipo.....',
-            typeHead: true,
-            triggerAction: 'all',
-            lazyRender: true,
-            mode: 'local',
-            store: ['ENTRADA', 'SALIDA'],
-            width: 200,
-            type: 'ComboBox'
-        }),
         validarFiltro: function () {
             if(this.cmbIdMarca.getValue() !== '') {
 
@@ -84,6 +72,31 @@ header("content-type: text/javascript; charset=UTF-8");
         onButtonEdit: function () {
             Phx.vista.ProductoHijo4.superclass.onButtonEdit.call(this);
             this.Cmp.id_marca.setValue(this.cmbIdMarca.getValue())
+        },
+        wsPro: function (mensaje) {
+            console.log('mensaje ws',mensaje)
+        },
+        iniciarEventos: function () {
+
+
+
+            this.cmbIdMarca.store.load(
+                {params:{start:0,limit:this.tam_pag},
+                    callback : function (r) {
+                    console.log('r',r)
+                        if (r.length > 0) {
+                            this.cmbIdMarca.setValue(r[0].data.id_marca);
+                            this.cmbIdMarca.fireEvent('select',this.cmbIdMarca,this.cmbIdMarca.store.getById(r[0].data.id_marca));
+
+                            Phx.CP.webSocket.escucharEvento(`productos_de_la_marca_${this.cmbIdMarca.getValue()}`,this.idContenedor,'wsPro', this);
+
+                        }
+
+                    }, scope : this
+                });
+
+
+
         }
 
 

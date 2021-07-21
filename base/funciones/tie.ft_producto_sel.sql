@@ -22,6 +22,7 @@ DECLARE
     v_parametros          record;
     v_nombre_funcion       text;
     v_resp                varchar;
+    v_registros_prod        record;
 
 BEGIN
 
@@ -96,7 +97,6 @@ BEGIN
             return v_consulta;
 
         end;
-
 
 
     else

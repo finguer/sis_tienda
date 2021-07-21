@@ -81,6 +81,7 @@ BEGIN
 
             v_resp = pxp.f_agrega_clave(v_resp,'mensaje','insercion exitoso'||v_id_producto||')');
             v_resp = pxp.f_agrega_clave(v_resp,'v_id_producto',v_id_producto::varchar);
+            v_resp = pxp.f_agrega_clave(v_resp,'v_ws_event','productos_de_la_marca_'||v_parametros.id_marca::varchar);
 
             --Devuelve la respuesta
             return v_resp;

@@ -313,6 +313,11 @@ header("content-type: text/javascript; charset=UTF-8");
                 }
             ],
 
+        marcasNuevas: function (mensaje) {
+            console.log('marcasNuevas a llegado un mensaje', mensaje)
+            this.load({params:{start:0, limit:this.tam_pag}})
+
+        },
         iniciarEventos: function () {
 
             this.cmbIdMarca.on('select', function (rec, d) {
@@ -322,6 +327,7 @@ header("content-type: text/javascript; charset=UTF-8");
                 this.cmbIdProducto.store.baseParams.id_marca = d.data.id_marca;
                 this.cmbIdProducto.modificado = true;
             }, this);
+            Phx.CP.webSocket.escucharEvento(`sis_marca_marca_nuevas_marcas`,this.idContenedor,'marcasNuevas', this);
 
         },
             preparaMenu: function () {

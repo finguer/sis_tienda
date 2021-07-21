@@ -26,6 +26,22 @@ class ACTMarca extends ACTbase
         } else{
             $this->res=$this->objFunc->modificarMarca($this->objParam);
         }
+
+        if($this->res->getTipo() != 'EXITO') {
+            $this->res->imprimirRespuesta($this->res->generarJson());
+            exit;
+        }
+
+        $data = array(
+            "evento" => "sis_marca_marca_nuevas_marcas",
+            "mensaje" => "tienes una nueva marca"
+        );
+        $send = array(
+            "tipo" => "enviarMensaje",
+            "data" => $data
+        );
+        $res = $this->dispararEventoWS($send);
+
         $this->res->imprimirRespuesta($this->res->generarJson());
     }
     function eliminarMarca() {

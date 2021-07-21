@@ -23,3 +23,10 @@ select pxp.f_insert_testructura_gui ('CLIE', 'TIE');
 select pxp.f_insert_testructura_gui ('DOSI', 'TIE');
 /***********************************F-DEP-AT-TIE-1-26/06/2021*****************************************/
 
+/***********************************I-DEP-JRR-TIE-1-21/07/2021*****************************************/
+ALTER TABLE tie.tventa ADD 
+    CONSTRAINT fk__tventa__id_proceso_wf FOREIGN KEY (id_proceso_wf) REFERENCES wf.tproceso_wf(id_proceso_wf);
+
+ALTER TABLE tie.tventa ADD 
+    CONSTRAINT fk__tventa__id_estado_wf FOREIGN KEY (id_estado_wf) REFERENCES wf.testado_wf(id_estado_wf);
+/***********************************F-DEP-JRR-TIE-1-21/07/2021*****************************************/

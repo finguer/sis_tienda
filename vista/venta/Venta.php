@@ -26,6 +26,16 @@ header("content-type: text/javascript; charset=UTF-8");
                     handler: this.generarVentaJson
                 });
 
+                this.addButton('btnChequeoDocumentosWf',
+		            {
+		                text: 'Documentos del Proceso',
+		                iconCls: 'bchecklist',
+		                disabled: true,
+		                handler: this.loadCheckDocumentosWf,
+		                tooltip: '<b>Documentos del Proceso</b><br/>Subir los documetos requeridos en el proceso seleccionado.'
+		            }
+		        ); 
+
 
                 this.init();
                 this.load({params:{start:0, limit:this.tam_pag}})
@@ -369,6 +379,40 @@ header("content-type: text/javascript; charset=UTF-8");
             console.log('objRes',objRes)
             console.log('pdf',pdf)
         },
+
+        preparaMenu:function()
+        {    
+            var rec = this.sm.getSelected();            
+            Phx.vista.Venta.superclass.preparaMenu.call(this);
+            this.getBoton('btn_generar_venta').enable();
+            this.getBoton('btn_generar_venta_json').enable();
+            this.getBoton('btnChequeoDocumentosWf').enable();
+        },
+
+        liberaMenu:function()
+        {  
+            this.getBoton('btn_generar_venta').disable();
+            this.getBoton('btn_generar_venta_json').disable();
+            this.getBoton('btnChequeoDocumentosWf').disable();
+            Phx.vista.Venta.superclass.liberaMenu.call(this);            
+        },           
+
+        loadCheckDocumentosWf:function() {
+            var rec=this.sm.getSelected();
+            rec.data.nombreVista = this.nombreVista;           
+            
+            Phx.CP.loadWindows('../../../sis_workflow/vista/documento_wf/DocumentoWf.php',
+                'Documentos del Proceso',
+                {
+                    width:'90%',
+                    height:500
+                },
+                rec.data,
+                this.idContenedor,
+                'DocumentoWf'                
+	       );
+	       
+	    },
 
 
 

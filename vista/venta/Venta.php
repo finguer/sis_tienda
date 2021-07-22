@@ -253,6 +253,10 @@ header("content-type: text/javascript; charset=UTF-8");
             id_store:'id_venta',
             fields: [
                 {name:'id_venta', type: 'numeric'},
+                {name:'id_estado_wf', type: 'numeric'},
+                {name:'id_proceso_wf', type: 'numeric'},
+                {name:'estado', type: 'string'},
+                {name:'nro_tramite', type: 'string'},
                 {name:'estado_reg', type: 'string'},
                 {name:'id_cliente', type: 'numeric'},
                 {name:'id_periodo', type: 'numeric'},

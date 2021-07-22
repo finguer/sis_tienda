@@ -1,7 +1,7 @@
-CREATE OR REPLACE FUNCTION "tie"."ft_venta_sel"(
-    p_administrador integer, p_id_usuario integer, p_tabla character varying, p_transaccion character varying)
-    RETURNS character varying AS
-$BODY$
+CREATE OR REPLACE FUNCTION tie.ft_venta_sel(p_administrador integer, p_id_usuario integer, p_tabla character varying, p_transaccion character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
     v_consulta            varchar;
     v_parametros          record;
@@ -28,8 +28,12 @@ BEGIN
 						tv.fecha_mod,
 						usu1.cuenta as usr_reg,
 						usu2.cuenta as usr_mod,
-						tv.id_dosificacion
-                         FROM tie.tventa tv
+						tv.id_dosificacion,
+						tv.id_estado_wf,
+						tv.id_proceso_wf,
+                        tv.estado,
+						tv.nro_tramite
+						 FROM tie.tventa tv
                          inner join segu.tusuario usu1 on usu1.id_usuario = tv.id_usuario_reg
                          left join segu.tusuario usu2 on usu2.id_usuario = tv.id_usuario_mod
                           where  ';
@@ -85,9 +89,5 @@ EXCEPTION
         v_resp = pxp.f_agrega_clave(v_resp,'procedimientos',v_nombre_funcion);
         raise exception '%',v_resp;
 END;
-$BODY$
-    LANGUAGE 'plpgsql' VOLATILE
-                       COST 100;
-ALTER FUNCTION "tie"."ft_venta_sel"(integer, integer, character varying, character varying) OWNER TO postgres;
-
-
+$function$
+;

@@ -35,6 +35,29 @@ header("content-type: text/javascript; charset=UTF-8");
 		                tooltip: '<b>Documentos del Proceso</b><br/>Subir los documetos requeridos en el proceso seleccionado.'
 		            }
 		        ); 
+                this.addButton('diagrama_gantt',
+                    {
+                        text:'Diagrama Gantt',
+                        iconCls: 'bgantt',
+                        disabled:true,
+                        handler:this.diagramGantt,
+                        tooltip: '<b>Diagrama Gantt de proceso macro</b>'
+                    }
+                );
+
+                this.addButton('ant_estado',{
+		                    text:'Anterior',
+		                    iconCls:'batras',
+		                    disabled:true,
+		                    handler:this.openAntFormEstadoWf,
+		                    tooltip: '<b>Retroceder un estado</b>'});
+
+                this.addButton('sig_estado',{
+		                    text:'Siguiente',
+		                    iconCls:'badelante',
+		                    disabled:true,
+		                    handler:this.openFormEstadoWf,
+		                    tooltip: '<b>Cambiar al siguientes estado</b>'});
 
 
                 this.init();
@@ -391,6 +414,13 @@ header("content-type: text/javascript; charset=UTF-8");
             this.getBoton('btn_generar_venta').enable();
             this.getBoton('btn_generar_venta_json').enable();
             this.getBoton('btnChequeoDocumentosWf').enable();
+            this.getBoton('diagrama_gantt').enable();
+            if (rec.data.estado != 'borrador'){
+                this.getBoton('ant_estado').enable();
+            }
+            
+            this.getBoton('sig_estado').enable();
+            this.getBoton('diagrama_gantt').enable();
         },
 
         liberaMenu:function()
@@ -398,6 +428,9 @@ header("content-type: text/javascript; charset=UTF-8");
             this.getBoton('btn_generar_venta').disable();
             this.getBoton('btn_generar_venta_json').disable();
             this.getBoton('btnChequeoDocumentosWf').disable();
+            this.getBoton('diagrama_gantt').disable();
+            this.getBoton('ant_estado').disable();
+            this.getBoton('sig_estado').disable();
             Phx.vista.Venta.superclass.liberaMenu.call(this);            
         },           
 
@@ -416,6 +449,98 @@ header("content-type: text/javascript; charset=UTF-8");
                 'DocumentoWf'                
 	       );
 	       
+	    },
+        diagramGantt:function (){         
+            var data=this.sm.getSelected().data.id_proceso_wf;
+            Phx.CP.loadingShow();
+            Ext.Ajax.request({
+                url:'../../sis_workflow/control/ProcesoWf/diagramaGanttTramite',
+                params:{'id_proceso_wf':data},
+                success:this.successExport,
+                failure: this.conexionFailure,
+                timeout:this.timeout,
+                scope:this
+            });         
+		},
+        openAntFormEstadoWf:function(){
+	         var rec=this.sm.getSelected();
+	            Phx.CP.loadWindows('../../../sis_workflow/vista/estado_wf/AntFormEstadoWf.php',
+	            'Estado de Wf',
+	            {
+	                modal:true,
+	                width:450,
+	                height:250
+	            }, {data:rec.data}, this.idContenedor,'AntFormEstadoWf',
+	            {
+	                config:[{
+	                          event:'beforesave',
+	                          delegate: this.onAntEstado,
+	                        }
+	                        ],
+	               scope:this
+	             })
+	   },
+
+       openFormEstadoWf:function() {
+        
+        var rec=this.sm.getSelected();	
+ 
+            Phx.CP.loadWindows('../../../sis_workflow/vista/estado_wf/FormEstadoWf.php',
+            'Estado de Wf',
+            {
+                modal:true,
+                width:700,
+                height:450
+            }, {data:rec.data}, this.idContenedor,'FormEstadoWf',
+            {
+                config:[{
+                          event:'beforesave',
+                          delegate: this.onSaveWizard,
+                          
+                        },
+                        ],
+                
+                scope:this
+             });	        
+    },	    
+
+       onAntEstado:function(wizard,resp){
+	            Phx.CP.loadingShow();
+	            Ext.Ajax.request({
+	                url:'../../sis_workflow/control/ProcesoWf/anteriorEstadoProcesoWf',
+	                params:{id_proceso_wf:resp.id_proceso_wf, 
+	                        id_estado_wf:resp.id_estado_wf, 
+	                        operacion: 'cambiar',
+	                        obs:resp.obs},
+	                argument:{wizard:wizard},        
+	                success:this.successSincAnt,
+	                failure: this.conexionFailure,
+	                timeout:this.timeout,
+	                scope:this
+	            }); 
+	     },
+        
+         onSaveWizard:function(wizard,resp){	        
+	        Phx.CP.loadingShow();
+	        Ext.Ajax.request({
+	            url:'../../sis_workflow/control/ProcesoWf/siguienteEstadoProcesoWf',
+	            params:{
+	                
+	                id_proceso_wf_act:  resp.id_proceso_wf_act,
+	                id_estado_wf_act:  resp.id_estado_wf_act,
+	                id_tipo_estado:     resp.id_tipo_estado,
+	                id_funcionario_wf:  resp.id_funcionario_wf,
+	                id_depto_wf:        resp.id_depto_wf,
+	                obs:                resp.obs,
+	                json_procesos:      Ext.util.JSON.encode(resp.procesos)
+	                },
+	            success:this.successWizard,
+	            failure: this.conexionFailure,
+	            argument:{wizard:wizard},
+	            timeout:this.timeout,
+	            scope:this
+	        });
+	         
 	    },
 
 

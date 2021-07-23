@@ -61,7 +61,7 @@ header("content-type: text/javascript; charset=UTF-8");
 
 
                 this.init();
-                this.load({params:{start:0, limit:this.tam_pag}})
+                
             },
 
             Atributos:[
@@ -173,6 +173,18 @@ header("content-type: text/javascript; charset=UTF-8");
                     grid:true,
                     form:true,
                     bottom_filter: true,
+                },
+
+                {
+                    config:{
+                        name: 'estado',
+                        fieldLabel: 'Estado',                        
+                        gwidth: 100
+                    },
+                    type:'Field',
+                    filters:{pfiltro:'tv.estado',type:'string'},                    
+                    grid:true,
+                    form:false
                 },
 
                 {
@@ -415,11 +427,15 @@ header("content-type: text/javascript; charset=UTF-8");
             this.getBoton('btn_generar_venta_json').enable();
             this.getBoton('btnChequeoDocumentosWf').enable();
             this.getBoton('diagrama_gantt').enable();
-            if (rec.data.estado != 'borrador'){
+            if (rec.data.estado != 'borrador' && rec.data.estado != 'finalizado'){
                 this.getBoton('ant_estado').enable();
             }
+
+            if (rec.data.estado != 'finalizado'){                
+                this.getBoton('sig_estado').enable();
+            }
             
-            this.getBoton('sig_estado').enable();
+            
             this.getBoton('diagrama_gantt').enable();
         },
 
@@ -502,18 +518,23 @@ header("content-type: text/javascript; charset=UTF-8");
                 
                 scope:this
              });	        
-    },	    
+    },	 
+    successWizard:function(resp){        
+        Phx.CP.loadingHide();
+        resp.argument.wizard.panel.destroy()
+        this.reload();
+     },   
 
        onAntEstado:function(wizard,resp){
 	            Phx.CP.loadingShow();
 	            Ext.Ajax.request({
-	                url:'../../sis_workflow/control/ProcesoWf/anteriorEstadoProcesoWf',
+	                url:'../../sis_tienda/control/Venta/siguienteEstadoVenta',
 	                params:{id_proceso_wf:resp.id_proceso_wf, 
 	                        id_estado_wf:resp.id_estado_wf, 
 	                        operacion: 'cambiar',
 	                        obs:resp.obs},
 	                argument:{wizard:wizard},        
-	                success:this.successSincAnt,
+	                success:this.successWizard,
 	                failure: this.conexionFailure,
 	                timeout:this.timeout,
 	                scope:this
@@ -523,7 +544,7 @@ header("content-type: text/javascript; charset=UTF-8");
          onSaveWizard:function(wizard,resp){	        
 	        Phx.CP.loadingShow();
 	        Ext.Ajax.request({
-	            url:'../../sis_workflow/control/ProcesoWf/siguienteEstadoProcesoWf',
+	            url:'../../sis_tienda/control/Venta/siguienteEstadoVenta',
 	            params:{
 	                
 	                id_proceso_wf_act:  resp.id_proceso_wf_act,
@@ -542,6 +563,8 @@ header("content-type: text/javascript; charset=UTF-8");
 	        });
 	         
 	    },
+
+    
 
 
 

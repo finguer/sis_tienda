@@ -27,6 +27,12 @@ DECLARE
     v_id_proceso_wf	integer;
     v_id_estado_wf	integer;
      v_codigo_estado	varchar;
+     v_id_estado_actual integer;
+     v_codigo_tipo_pro  varchar;
+     v_codigo_llave     varchar;
+    v_registros_proc    record;
+   v_codigo_estado_siguiente	varchar;
+     
 BEGIN
     v_nombre_funcion = 'tie.ft_venta_ime';
     v_parametros = pxp.f_get_record(p_tabla);
@@ -294,6 +300,134 @@ BEGIN
             v_resp = pxp.f_agrega_clave(v_resp,'json',v_venta_json::varchar);
 
             --Devuelve la respuesta
+            return v_resp;
+
+        end;
+    
+       /*********************************
+         #TRANSACCION:  'TIE_VENTASIGES_MOD'
+         #DESCRIPCION:    Cambiar la venta al siguiente estado
+         #AUTOR:        favio figueroa
+         #FECHA:        17-04-2020 01:52:57
+        ***********************************/
+
+    elsif(p_transaccion='TIE_VENTASIGES_MOD')then
+
+        begin       
+            -- hay que recuperar el supervidor que seria el estado inmediato,...
+             v_id_estado_actual =  wf.f_registra_estado_wf(v_parametros.id_tipo_estado,
+                                                             v_parametros.id_funcionario_wf,
+                                                             v_parametros.id_estado_wf_act,
+                                                             v_parametros.id_proceso_wf_act,
+                                                             p_id_usuario,
+                                                             v_parametros._id_usuario_ai,
+                                                             v_parametros._nombre_usuario_ai
+                                                             );
+            select
+                 te.codigo
+                into
+                 v_codigo_estado_siguiente
+                from wf.ttipo_estado te
+                where te.id_tipo_estado = v_parametros.id_tipo_estado;
+
+            FOR v_registros_proc in ( select * from json_populate_recordset(null::wf.proceso_disparado_wf, v_parametros.json_procesos::json)) LOOP
+
+               --get cdigo tipo proceso
+               select
+                  tp.codigo,
+                  tp.codigo_llave
+               into
+                  v_codigo_tipo_pro,
+                  v_codigo_llave
+               from wf.ttipo_proceso tp
+                where  tp.id_tipo_proceso =  v_registros_proc.id_tipo_proceso_pro;
+
+
+               -- disparar creacion de procesos seleccionados
+
+              SELECT
+                       ps_id_proceso_wf,
+                       ps_id_estado_wf,
+                       ps_codigo_estado
+                 into
+                       v_id_proceso_wf,
+                       v_id_estado_wf,
+                       v_codigo_estado
+              FROM wf.f_registra_proceso_disparado_wf(
+                       p_id_usuario,
+                       v_parametros._id_usuario_ai,
+                       v_parametros._nombre_usuario_ai,
+                       v_id_estado_actual,
+                       v_registros_proc.id_funcionario_wf_pro,
+                       v_registros_proc.id_depto_wf_pro,
+                       v_registros_proc.obs_pro,
+                       v_codigo_tipo_pro,
+                       v_codigo_tipo_pro);           
+
+
+           END LOOP;
+
+           update tie.tventa 
+           set estado = v_codigo_estado_siguiente,
+           id_estado_wf = v_id_estado_actual
+           where id_proceso_wf = v_parametros.id_proceso_wf_act;
+
+
+            v_resp = pxp.f_agrega_clave(v_resp,'mensaje','Cambio de estado de venta realizado');
+            v_resp = pxp.f_agrega_clave(v_resp,'operacion','cambio exitoso');
+
+            --Devuelve la respuesta
+            return v_resp;
+
+        end;
+    elseif(p_transaccion='TIE_VENTAANTES_MOD')then
+        begin
+
+        --------------------------------------------------
+        --Retrocede al estado inmediatamente anterior
+        -------------------------------------------------
+       --recuperaq estado anterior segun Log del WF
+          SELECT
+
+             ps_id_tipo_estado,
+             ps_id_funcionario,
+             ps_id_usuario_reg,
+             ps_id_depto,
+             ps_codigo_estado,
+             ps_id_estado_wf_ant
+          into
+             v_id_tipo_estado,
+             v_id_funcionario,
+             v_id_usuario_reg,
+             v_id_depto,
+             v_codigo_estado,
+             v_id_estado_wf_ant
+          FROM wf.f_obtener_estado_ant_log_wf(v_parametros.id_estado_wf);
+
+
+          -- registra nuevo estado
+
+          v_id_estado_actual = wf.f_registra_estado_wf(
+              v_id_tipo_estado,
+              v_id_funcionario,
+              v_parametros.id_estado_wf,
+              v_id_proceso_wf,
+              p_id_usuario,
+              v_parametros._id_usuario_ai,
+              v_parametros._nombre_usuario_ai
+             );
+             
+            update tie.tventa 
+           set estado = v_codigo_estado,
+           id_estado_wf = v_id_estado_actual
+           where id_proceso_wf = v_parametros.id_proceso_wf;
+
+         -- si hay mas de un estado disponible  preguntamos al usuario
+            v_resp = pxp.f_agrega_clave(v_resp,'mensaje','Se realizo el cambio de estado)');
+            v_resp = pxp.f_agrega_clave(v_resp,'operacion','cambio_exitoso');
+
+
+          --Devuelve la respuesta
             return v_resp;
 
         end;
